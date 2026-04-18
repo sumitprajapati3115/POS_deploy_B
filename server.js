@@ -16,8 +16,8 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "https://pos-deploy-f.onrender.com",
-      "srv-d7ehkqnlk1mc73fk97n0"
+      "https://pos-deploy-f-k283.onrender.com",
+      "srv-d7him7lckfvc73ek9q60"
     ],
     credentials: true,
   })
