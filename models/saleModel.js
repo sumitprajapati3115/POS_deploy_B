@@ -6,18 +6,20 @@ const saleItemSchema = new mongoose.Schema({
     ref: "Product",
     required: true
   },
-  name: String,
-  barcode: String,
-  price: Number,
-  quantity: Number,
-  total: Number
+  name: { type: String, required: true },
+  barcode: { type: String, required: true },
+  price: { type: Number, required: true },
+  quantity: { type: Number, required: true },
+  total: { type: Number, required: true }
 });
 
 const saleSchema = new mongoose.Schema(
   {
     billNumber: {
       type: String,
-      required: true
+      required: true,
+      unique: true, // 🌟 Ek bill number dobara repeat nahi hoga
+      index: true   // 🌟 Bill number se search karna super fast ho jayega
     },
 
     items: [saleItemSchema],
@@ -39,10 +41,12 @@ const saleSchema = new mongoose.Schema(
     },
 
     finalAmount: {
-      type: Number
+      type: Number,
+      required: true
     }
   },
   { timestamps: true }
 );
 
-export default mongoose.model("Sale", saleSchema);
+// 🌟 Safe export for hot-reloading
+export default mongoose.models.Sale || mongoose.model("Sale", saleSchema);
