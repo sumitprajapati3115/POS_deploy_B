@@ -1,5 +1,5 @@
-import Product from "../models/ProductModel.js"
-import bwipjs from "bwip-js"
+import Product from "../models/ProductModel.js";
+import bwipjs from "bwip-js";
 
 // Add product
 export const addProduct = async (req, res) => {
@@ -13,13 +13,12 @@ export const addProduct = async (req, res) => {
       costPrice,
       sellingPrice,
       discount,
-      
       stockQuantity,
       expiryDate,
       description
     } = req.body;
 
-    if (!name || !barcode || !category || !costPrice || !sellingPrice ) {
+    if (!name || !barcode || !category || !costPrice || !sellingPrice) {
       return res.status(400).json({
         success: false,
         message: "Required fields are missing"
@@ -35,6 +34,7 @@ export const addProduct = async (req, res) => {
       });
     }
 
+    // .create() automatically triggers the pre("save") hook
     const product = await Product.create({
       name,
       barcode,
@@ -44,7 +44,6 @@ export const addProduct = async (req, res) => {
       costPrice,
       sellingPrice,
       discount,
-      
       stockQuantity,
       expiryDate,
       description
@@ -64,8 +63,7 @@ export const addProduct = async (req, res) => {
   }
 };
 
-// Update/Edit 
-
+// Update/Edit Product
 export const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
@@ -85,10 +83,8 @@ export const updateProduct = async (req, res) => {
       }
     }
 
-    const product = await Product.findByIdAndUpdate(id, req.body, {
-      new: true,
-      runValidators: true,
-    });
+    // 🌟 FIX: Find the product first, update it, then save() to trigger the auto-calculate hook
+    const product = await Product.findById(id);
 
     if (!product) {
       return res.status(404).json({
@@ -96,6 +92,12 @@ export const updateProduct = async (req, res) => {
         message: "Product not found",
       });
     }
+
+    // req.body ka data product mein daal dein
+    Object.assign(product, req.body);
+    
+    // .save() run hoga toh finalPrice apne aap calculate ho jayega!
+    await product.save();
 
     res.status(200).json({
       success: true,
@@ -110,11 +112,9 @@ export const updateProduct = async (req, res) => {
   }
 };
 
-//delete product
-
+// Delete product
 export const deleteProduct = async (req, res) => {
   try {
-
     const { id } = req.params;
 
     const product = await Product.findByIdAndDelete(id);
@@ -138,10 +138,10 @@ export const deleteProduct = async (req, res) => {
     });
   }
 };
-//search 
+
+// Search products
 export const searchProducts = async (req, res) => {
   try {
-
     const { keyword } = req.query;
 
     const products = await Product.find({
@@ -165,24 +165,17 @@ export const searchProducts = async (req, res) => {
   }
 };
 
-
 // Get all products
-export const getProducts = async (req,res) => {
+export const getProducts = async (req, res) => {
+  try {
+    const products = await Product.find();
+    res.json(products);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
- try {
-
-  const products = await Product.find()
-
-  res.json(products)
-
- } catch(error){
-
-  res.status(500).json({message:error.message})
-
- }
-
-}
-
+// Get product by ID
 export const getProductById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -210,7 +203,6 @@ export const getProductById = async (req, res) => {
 // Get product by barcode (scanner)
 export const getProductByBarcode = async (req, res) => {
   try {
-
     const { barcode } = req.params;
 
     const product = await Product.findOne({ barcode });
@@ -235,36 +227,8 @@ export const getProductByBarcode = async (req, res) => {
   }
 };
 
-
-// export const generateBarcode = async (req,res)=>{
-
-//  try{
-
-//   const { barcode } = req.params
-
-//   const png = await bwipjs.toBuffer({
-//    bcid: "code128",
-//    text: barcode,
-//    scale: 3,
-//    height: 10,
-//    includetext: true
-//   })
-
-//   res.type("png")
-//   res.send(png)
-
-//  }catch(err){
-
-//   res.status(500).json({error:"Barcode generation failed"})
-
-//  }
-
-// }
-
-
-
+// Generate Barcode Image
 export const generateBarcodeImage = async (req, res) => {
-
   const { barcode } = req.params;
 
   try {
